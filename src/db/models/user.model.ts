@@ -25,7 +25,7 @@ const UserSchema = new Schema<IUser>({
     type: String,
     required: false,
     unique: true,
-    sparse: true
+    sparse: true,
   },
 
   sex: {
