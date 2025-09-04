@@ -15,6 +15,7 @@ import deliveryRoutes from "./routes/delivery.router";
 import paymentRoutes from "./routes/payment.router";
 import adminRoutes from "./routes/admin.router";
 import uploadRoutes from "./routes/upload.router";
+import testRoutes from "./routes/test.router";
 
 import { errorHandler } from "./middleware/erroHandler";
 import cors from "cors";
@@ -25,30 +26,53 @@ dotenv.config();
 const app = express();
 const port = process.env.PORT || 8080;
 
-// const adminURL = "http://localhost:3001";
-// const clientURL = "http://localhost:3000";
-// const providerURL = "http://localhost:3002";
-const providerURL = "https://agent.shongi.org";
-const adminURL = "https://admin.shongi.org";
-export const clientURL = "https://shongi.org";
+// Development URLs
+const DEV_FRONTEND_URL = "http://localhost:3000";
+const DEV_ADMIN_URL = "http://localhost:3001";
+
+// Production URLs (update these with your actual production domains)
+const PROD_FRONTEND_URL = process.env.FRONTEND_URL || "https://your-furniture-frontend.com";
+const PROD_ADMIN_URL = process.env.ADMIN_URL || "https://your-furniture-admin.com";
+
+// Determine allowed origins based on environment
+const allowedOrigins = process.env.NODE_ENV === "production" 
+  ? [PROD_FRONTEND_URL, PROD_ADMIN_URL]
+  : [DEV_FRONTEND_URL, DEV_ADMIN_URL, "http://localhost:3002"];
 
 const corsOptions = {
-  // origin: "http://localhost:3000",
-  origin: [adminURL, clientURL, providerURL],
-  // origin: "*",
-  methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
-  // allowedHeaders: ["Content-Type", "token"],
+  origin: function (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) {
+    // Allow requests with no origin (like mobile apps, Postman, etc.)
+    if (!origin) return callback(null, true);
+    
+    if (allowedOrigins.includes(origin) || process.env.NODE_ENV === "development") {
+      callback(null, true);
+    } else {
+      callback(new Error("Not allowed by CORS"));
+    }
+  },
+  methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+  allowedHeaders: [
+    "Origin",
+    "X-Requested-With", 
+    "Content-Type", 
+    "Accept", 
+    "Authorization",
+    "token",
+    "x-access-token"
+  ],
   credentials: true,
+  optionsSuccessStatus: 200, // Some legacy browsers choke on 204
 };
 
 app.use(cors(corsOptions));
 
+// Handle preflight requests
+app.options('*', cors(corsOptions));
+
 const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
-    // origin: ["http://localhost:3001", "http://localhost:3000"],
-    origin: adminURL,
-    // origin: "*",
+    origin: allowedOrigins,
     methods: ["GET", "POST", "DELETE", "PUT"],
     credentials: true,
   },
@@ -80,7 +104,7 @@ io.on("connection", (socket) => {
 });
 
 app.set("io", io);
-app.set("origins", ["http://localhost:3001", "http://localhost:3000"]);
+app.set("origins", allowedOrigins);
 
 app.use(helmet());
 app.use(morgan("dev"));
@@ -100,6 +124,7 @@ app.use("/api/delivery", deliveryRoutes);
 app.use("/api/payment", paymentRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/upload", uploadRoutes);
+app.use("/api/test", testRoutes);
 
 app.get("/test-error", (req: Request, res: Response, next: NextFunction) => {
   try {
