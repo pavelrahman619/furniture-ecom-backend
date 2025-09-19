@@ -63,7 +63,6 @@ export const getProducts = async (
       Product.find(filterQuery)
         .skip(skip)
         .limit(limitNumber)
-        .populate("category_id")
         .sort({ created_at: -1 }),
       Product.countDocuments(filterQuery),
       Category.find().sort({ name: 1 }),
