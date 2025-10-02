@@ -29,7 +29,13 @@ export const getProducts = async (
     const filterQuery: IProductFilterQuery = {};
 
     if (category) {
-      filterQuery.category_id = category as string;
+      // Handle both single category and multiple categories (comma-separated)
+      const categories = (category as string).split(',').map(cat => cat.trim()).filter(Boolean);
+      if (categories.length === 1) {
+        filterQuery.category_id = categories[0];
+      } else if (categories.length > 1) {
+        filterQuery.category_id = { $in: categories };
+      }
     }
 
     if (price_min || price_max) {
@@ -284,7 +290,13 @@ export const searchProducts = async (
     }
 
     if (category) {
-      searchQuery.category_id = category as string;
+      // Handle both single category and multiple categories (comma-separated)
+      const categories = (category as string).split(',').map(cat => cat.trim()).filter(Boolean);
+      if (categories.length === 1) {
+        searchQuery.category_id = categories[0];
+      } else if (categories.length > 1) {
+        searchQuery.category_id = { $in: categories };
+      }
     }
 
     if (filters) {
