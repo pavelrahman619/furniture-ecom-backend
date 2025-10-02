@@ -36,7 +36,7 @@ export interface IStockLocation {
 }
 
 export interface IProductFilterQuery {
-  category_id?: string;
+  category_id?: string | { $in: string[] };
   price?: {
     $gte?: number;
     $lte?: number;
