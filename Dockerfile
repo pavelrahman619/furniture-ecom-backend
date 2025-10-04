@@ -2,7 +2,7 @@
 FROM node:18-alpine
 
 # Set the working directory
-WORKDIR /
+WORKDIR /app
 
 # Copy package.json and package-lock.json
 COPY package*.json ./
@@ -16,11 +16,14 @@ COPY . .
 # Install TypeScript globally
 RUN npm install -g typescript
 
+# Set production environment
+ENV NODE_ENV=production
+
 # Compile TypeScript to JavaScript
-RUN tsc
+RUN npm run build
 
 # Expose the port the app runs on
 EXPOSE 8080
-# cd ..
+
 # Start the application
-CMD ["node", "dist/server.js"]
+CMD ["npm", "run", "start"]
