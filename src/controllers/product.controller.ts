@@ -100,7 +100,7 @@ export const getProducts = async (
         id: cat._id,
         name: cat.name,
         count: allProducts.filter(
-          (p) => p.category_id.toString() === cat._id?.toString()
+          (p) => p.category_id && p.category_id.toString() === cat._id?.toString()
         ).length,
       })),
     };
